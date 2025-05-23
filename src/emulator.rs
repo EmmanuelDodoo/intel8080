@@ -73,8 +73,7 @@ impl<'a> Emulator<'a> {
         }
     }
 
-    #[allow(dead_code)]
-    fn new_test(program: [u8; MEM_SIZE], start: u16) -> Self {
+    pub fn new_test(program: [u8; MEM_SIZE], start: u16) -> Self {
         let mut new = Self::new_from_start(program, start);
         new.mode = Mode::Testing(true);
         new
@@ -1309,8 +1308,7 @@ impl<'a> Emulator<'a> {
         }
     }
 
-    #[allow(dead_code)]
-    fn testing(&self) -> bool {
+    pub fn testing(&self) -> bool {
         let Mode::Testing(testing) = &self.mode else {
             return false;
         };
@@ -1364,51 +1362,4 @@ fn carry(bit_no: u8, a: u16, b: u16, carry: bool) -> bool {
 /// Calculates the Auxillary Carry from `x-y`
 fn calc_ac(x: u8, y: u8) -> bool {
     (((!y).wrapping_add(1) & 0x0f) + (x & 0x0f)) & 0x10 != 0
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs::read;
-
-    fn prep(program: &[u8]) -> Emulator<'_> {
-        let start = 0x100;
-        let mut memory = [0; MEM_SIZE];
-        let len = program.len().min(MEM_SIZE - start);
-
-        memory[start..start + len].copy_from_slice(&program[..len]);
-
-        memory[0x0000] = 0xd3;
-        memory[0x0001] = 0x00;
-
-        memory[0x0005] = 0xd3;
-        memory[0x0006] = 0x01;
-        memory[0x0007] = 0xc9;
-
-        Emulator::new_test(memory, start as u16)
-    }
-
-    fn test(test: &str) {
-        let rom = read(format!("./tests/{test}.COM")).unwrap();
-        let mut emulator = prep(&rom);
-
-        println!("\n**** Testing {test}.COM");
-
-        let mut ins = 0usize;
-
-        while emulator.testing() {
-            ins += 1;
-            emulator.cycle();
-        }
-
-        println!("\n**** {ins} instructions");
-    }
-
-    #[test]
-    fn tests() {
-        //test("8080PRE");
-        //test("TST8080");
-        test("CPUTEST");
-        //test("8080EXM");
-    }
 }
