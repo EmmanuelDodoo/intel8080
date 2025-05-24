@@ -1,3 +1,4 @@
+#![allow(unused_imports, dead_code)]
 use std::time::{Duration, Instant};
 
 /// Clock rate in Hz
@@ -39,8 +40,13 @@ pub struct Emulator<'a> {
     end_cycle: Duration,
 
     halt: bool,
-    /// If true, the Interrupt flip-flop is enabled
-    interrupt: bool,
+    /// Interrupt flags:
+    /// 0: Interrupt enabled
+    /// 1: Enable after next code
+    interrupt: u8,
+
+    /// Pending RST supplied by interrupting device.
+    pending_interrupt: Option<u8>,
 
     mode: Mode<'a>,
 }
@@ -65,7 +71,8 @@ impl<'a> Emulator<'a> {
             now: Instant::now(),
             end_cycle: Duration::ZERO,
             halt: false,
-            interrupt: false,
+            interrupt: 0,
+            pending_interrupt: None,
             mode: Mode::Normal {
                 reader: None,
                 writer: None,
@@ -88,7 +95,24 @@ impl<'a> Emulator<'a> {
             return;
         }
 
-        let opcode = self.memory[self.pc as usize];
+        // One instruction delay for enabling interrupt
+        if self.interrupt == 2 {
+            self.interrupt = 4;
+        } else if self.interrupt == 4 {
+            self.interrupt = 1;
+        }
+
+        let opcode = match self.pending_interrupt.take() {
+            Some(rst) => {
+                // Memory RSTs save the next PC. Interrupt RSTs save the current
+                // PC. Subtracting here unifies the two. Later when saving the
+                // PC, it'll be incremented by 1.
+                self.pc -= 1;
+                rst
+            }
+            None => self.memory[self.pc as usize],
+        };
+
         let maddr = {
             let h = self.registers[4] as u16;
             let l = self.registers[5] as u16;
@@ -674,13 +698,13 @@ impl<'a> Emulator<'a> {
 
             // EI
             0xfb => {
-                self.interrupt = true;
+                self.interrupt = 2;
                 self.pc += 1;
                 4.0
             }
             // DI
             0xf3 => {
-                self.interrupt = false;
+                self.interrupt = 0;
                 self.pc += 1;
                 4.0
             }
@@ -994,6 +1018,24 @@ impl<'a> Emulator<'a> {
 
         self.end_cycle = Duration::from_secs_f32(duration);
         self.now = Instant::now();
+    }
+
+    /// Attempts to supply an interrupt to the system. Returns true if successful.
+    ///
+    /// Fails if interrupts are not enabled for the system.
+    /// Fails if `rst` is not a valid RST opcdoe.
+    pub fn interrupt(&mut self, rst: u8) -> bool {
+        if self.interrupt != 1 {
+            return false;
+        }
+
+        match rst {
+            0xc7 | 0xcf | 0xd7 | 0xdf | 0xe7 | 0xef | 0xf7 | 0xff => {
+                self.pending_interrupt = Some(rst);
+                true
+            }
+            _ => false,
+        }
     }
 
     /// Adds a value plus an optional carry flag to a register.
@@ -1324,7 +1366,7 @@ impl<'a> Emulator<'a> {
 
     pub fn debug(&self) {
         println!(
-            "\nPC: {}, SP: {}, Halt: {}, Interrupt: {}",
+            "\nPC: {}, SP: {}, Halt: {}, Interrupt: {:08b}",
             self.pc, self.sp, self.halt, self.interrupt
         );
 

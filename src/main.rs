@@ -7,7 +7,7 @@ fn main() {
 
     let mode = args.next();
 
-    if mode == Some("--test".to_owned()) {
+    if mode == Some("--tests".to_owned()) {
         run_tests();
         return;
     }

@@ -6,15 +6,15 @@ An emulator for the Intel 8080 processor.
 
 - [x] Complete emulation of instruction set.
 
-- [x] Support for external I/O handling
+- [ ] Support for external I/O handling
 
-- [ ] Interrupt handling
+- [x] Interrupt handling
 
 - [x] Accurate emulation
 
 ## Running tests
 
-You can run the tests by running `cargo run -- --test`. The emulator passes the following tests:
+You can run the tests by running `cargo run -- --tests`. The emulator passes the following tests:
 
 - [x] 8080PRE.COM
 - [x] TST8080.COM
