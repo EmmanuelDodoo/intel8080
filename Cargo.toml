@@ -1,6 +1,16 @@
 [package]
 name = "intel8080"
 version = "0.1.0"
+license = "MIT"
 edition = "2024"
 
-[dependencies]
+[dev-dependencies]
+rodio = "0.20"
+pixels = "0.15"
+winit = "0.29"
+winit_input_helper = "0.15"
+
+
+[[example]]
+name = "invaders"
+path = "games/invaders/src/main.rs"
