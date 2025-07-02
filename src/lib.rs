@@ -444,14 +444,10 @@ impl CPU {
             // XCHG
             0xeb => {
                 //DH
-                let temp = self.registers[2];
-                self.registers[2] = self.registers[4];
-                self.registers[4] = temp;
+                self.registers.swap(2, 4);
 
                 // EL
-                let temp = self.registers[3];
-                self.registers[3] = self.registers[5];
-                self.registers[5] = temp;
+                self.registers.swap(3, 5);
 
                 self.pc += 1;
                 5.0
@@ -647,13 +643,12 @@ impl CPU {
 
             // XTHL
             0xe3 => {
-                let l = self.registers[5];
-                self.registers[5] = self.memory[self.sp as usize];
-                self.memory[self.sp as usize] = l;
+                std::mem::swap(&mut self.registers[5], &mut self.memory[self.sp as usize]);
 
-                let h = self.registers[4];
-                self.registers[4] = self.memory[(self.sp + 1) as usize];
-                self.memory[(self.sp + 1) as usize] = h;
+                std::mem::swap(
+                    &mut self.registers[4],
+                    &mut self.memory[(self.sp + 1) as usize],
+                );
 
                 self.pc += 1;
                 18.0
@@ -673,7 +668,7 @@ impl CPU {
             // IN
             0xdb => {
                 let port = self.memory[(self.pc + 1) as usize];
-                self.registers[6] = bus.read(&self, port);
+                self.registers[6] = bus.read(self, port);
 
                 self.pc += 2;
                 10.0
@@ -682,7 +677,7 @@ impl CPU {
             0xd3 => {
                 let port = self.memory[(self.pc + 1) as usize];
 
-                bus.write(&self, port, self.registers[6]);
+                bus.write(self, port, self.registers[6]);
 
                 self.pc += 2;
                 10.0
@@ -786,7 +781,7 @@ impl CPU {
             }
             // RST 1
             0xcf => {
-                self.push_pc(1, 1 * 8);
+                self.push_pc(1, 8);
 
                 11.0
             }
@@ -1333,7 +1328,7 @@ fn carry(bit_no: u8, a: u16, b: u16, carry: bool) -> bool {
     let result = a.wrapping_add(b).wrapping_add(carry as u16);
     let carry = result ^ a ^ b;
 
-    return (carry & (1 << bit_no)) != 0;
+    (carry & (1 << bit_no)) != 0
 }
 
 /// Calculates the Auxillary Carry from `x-y`

@@ -184,6 +184,7 @@ fn test(test: &str) {
     println!("\n**** {ins} instructions");
 }
 
+#[derive(Default)]
 pub struct TestingBus {
     pub exit: bool,
 }
@@ -202,7 +203,6 @@ impl Bus for TestingBus {
     fn write(&mut self, cpu: &CPU, port: u8, _data: u8) {
         if port == 0 {
             self.exit = true;
-            return;
         } else if port == 1 {
             let operation = cpu.register(1);
 

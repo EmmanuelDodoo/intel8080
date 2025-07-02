@@ -74,7 +74,7 @@ fn main() -> Result<(), Error> {
     let mut count = 0;
     let mut interrupt = 0xcf;
 
-    let res = event_loop.run(|event, elwt| {
+    event_loop.run(|event, elwt| {
         let cpf = RATE / FPS;
         let mut cycles = 0;
 
@@ -105,7 +105,8 @@ fn main() -> Result<(), Error> {
             let display = &cpu.memory()[0x2400..=0x3fff];
             map_display(display, pixels.frame_mut());
 
-            if let Err(_) = pixels.render() {
+            if let Err(error) = pixels.render() {
+                eprintln!("{error}");
                 elwt.exit();
                 return;
             }
@@ -121,7 +122,8 @@ fn main() -> Result<(), Error> {
 
             // Resize the window
             if let Some(size) = input.window_resized() {
-                if let Err(_) = pixels.resize_surface(size.width, size.height) {
+                if let Err(error) = pixels.resize_surface(size.width, size.height) {
+                    eprintln!("{error}");
                     elwt.exit();
                     return;
                 }
@@ -197,9 +199,9 @@ fn main() -> Result<(), Error> {
 
             window.request_redraw();
         }
-    });
+    })?;
 
-    res.map_err(|e| Error::Pixels(pixels::Error::UserDefined(Box::new(e))))
+    Ok(())
 }
 
 fn load_rom() -> CPU {
@@ -219,17 +221,17 @@ fn load_rom() -> CPU {
     CPU::new(&program)
 }
 
-fn load_audio<'a>(handle: &'a OutputStreamHandle) -> Result<[SFX<'a>; 9], Error> {
+fn load_audio(handle: &OutputStreamHandle) -> Result<[Sfx<'_>; 9], Error> {
     Ok([
-        SFX::new(read("games/invaders/audio/ufo_lowpitch.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/shoot.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/explosion.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/invaderkilled.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/fastinvader1.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/fastinvader2.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/fastinvader3.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/fastinvader4.wav")?, handle)?,
-        SFX::new(read("games/invaders/audio/ufo_highpitch.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/ufo_lowpitch.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/shoot.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/explosion.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/invaderkilled.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/fastinvader1.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/fastinvader2.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/fastinvader3.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/fastinvader4.wav")?, handle)?,
+        Sfx::new(read("games/invaders/audio/ufo_highpitch.wav")?, handle)?,
     ])
 }
 
@@ -242,16 +244,16 @@ fn map_display(memory: &[u8], pixels: &mut [u8]) {
         let color = 0x80;
         if value == 1 {
             if x < 16 {
-                if y < 16 || y > 118 + 16 {
+                if !(16..=118 + 16).contains(&y) {
                     r = color;
                     g = color;
                     b = color;
                 } else {
                     g = color;
                 }
-            } else if (x >= 16) && (x <= 16 + 56) {
+            } else if (16..=16 + 56).contains(&x) {
                 g = color;
-            } else if (x >= 16 + 56 + 120) && (x < 16 + 56 + 120 + 32) {
+            } else if (16 + 56 + 120..16 + 56 + 120 + 32).contains(&x) {
                 r = color;
             } else {
                 r = color;
@@ -259,7 +261,7 @@ fn map_display(memory: &[u8], pixels: &mut [u8]) {
                 b = color;
             }
         }
-        return [r, g, b, 0xff];
+        [r, g, b, 0xff]
     };
 
     for (byte, packed) in memory.iter().enumerate() {
@@ -311,7 +313,7 @@ struct Invaders<'a> {
     shift_data: u16,
     shift_offset: u8,
 
-    sfx: [SFX<'a>; 9],
+    sfx: [Sfx<'a>; 9],
     port3: u8,
     port5: u8,
 }
@@ -332,7 +334,7 @@ impl<'a> Invaders<'a> {
     }
 }
 
-impl<'a> Bus for Invaders<'a> {
+impl Bus for Invaders<'_> {
     fn read(&mut self, _cpu: &CPU, port: u8) -> u8 {
         match port {
             0 => {
@@ -451,14 +453,14 @@ impl<'a> Bus for Invaders<'a> {
     }
 }
 
-struct SFX<'a> {
+struct Sfx<'a> {
     data: Noah,
     sink: Option<Sink>,
     handle: &'a OutputStreamHandle,
 }
 
-impl<'a> SFX<'a> {
-    fn new(data: Vec<u8>, handle: &'a OutputStreamHandle) -> Result<SFX<'a>, Error> {
+impl<'a> Sfx<'a> {
+    fn new(data: Vec<u8>, handle: &'a OutputStreamHandle) -> Result<Sfx<'a>, Error> {
         Ok(Self {
             data: Noah(Arc::new(data)),
             sink: None,
