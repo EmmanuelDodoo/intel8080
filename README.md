@@ -4,13 +4,12 @@ An emulator for the Intel 8080 processor.
 
 ## Features
 
-- [x] Complete emulation of instruction set.
+- [x] Complete and accurate emulation of instruction set.
 
-- [ ] Support for external I/O handling
+- [x] Support for external I/O handling
 
 - [x] Interrupt handling
 
-- [x] Accurate emulation
 
 ## Running tests
 
@@ -20,9 +19,6 @@ You can run the tests by running `cargo run -- --tests`. The emulator passes the
 - [x] TST8080.COM
 - [x] CPUTEST.COM
 - [x] 8080EXM.COM
-
-`CPUTEST.COM` takes about 3 minutes to run while `8080EXM.COM` takes no less
-than 3 and half hours
 
 The standard output is as follows:
 
@@ -83,6 +79,41 @@ The standard output is as follows:
 
 ```
 
+## Trivial Program
+I included a trivial i8080 program which echoes 1 byte from stdin to stdout. Run
+this with `cargo run -- --trivial`.
+
+## Games
+
+The project also contains an implementation of games made for the i8080. It only 
+contains Space Invaders currently, but I will add more games later. 
+
+### Space Invaders
+
+![Space Invaders demo gif](assets/invaders.gif)
+
+You can run this with `cargo run --example invaders` in debug mode or 
+`cargo run --release --example invaders` in  release mode.
+
+#### Keybindings
+
+
+| Action | Key |
+| :--------: | :------: |
+|  Insert Coin | <kbd>c</kbd> |
+|  Start (1 player) | <kbd>1</kbd> |
+|  Start (2 players) | <kbd>2</kbd> |
+| left (player 1) |  <kbd>←</kbd>|
+| left (player 2) |  <kbd>a</kbd>|
+| right (player 1) |  <kbd>→</kbd>|
+| right (player 2) |  <kbd>d</kbd>|
+| Shoot (player 1) |  <kbd>↑</kbd>|
+| Shoot (player 2) |  <kbd>w</kbd>|
+|  Tilt | <kbd>Space</kbd> |
+|  Increase Speed | <kbd>Tab</kbd> |
+|  Reduce Speed | <kbd>Shift</kbd> + <kbd>Tab</kbd> |
+|  Exit | <kbd>Esc</kbd> |
+
 
 ## Acknowledgements
 
@@ -98,4 +129,8 @@ Much thanks to
 - [Intel 8080 instruction set](https://pastraiser.com/cpu/i8080/i8080_opcodes.html)
 
 - [Manuals for the tests](https://altairclone.com/downloads/cpu_tests/8080_8085%20CPU%20Exerciser.pdf)
+
+- [Computer Archeology for Space Invaders documentation](https://www.computerarcheology.com/Arcade/SpaceInvaders/Hardware.html)
+
+- [Audio from Classic Gaming](https://www.classicgaming.cc/classics/space-invaders/sounds)
 
