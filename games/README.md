@@ -1,6 +1,6 @@
 # Games
 
-## Space Invaderse
+## Space Invaders
 
 ![Space Invaders demo gif](assets/invaders.gif)
 

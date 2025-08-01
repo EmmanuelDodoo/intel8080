@@ -83,11 +83,13 @@ The standard output is as follows:
 I included a trivial i8080 program which echoes 1 byte from stdin to stdout. Run
 this with `cargo run -- --trivial`.
 
+## Programs
+
+- [Chip-8 emulator](programs/README.md#chip-8-emulator)
+
 ## Games
 
-The project also contains [implementations of games made for the i8080](games/README.md). It only 
-contains Space Invaders currently, but I will add more games later. 
-
+- [Space Invaders](games/README.md#space-invaders)
 
 ## Acknowledgements
 
