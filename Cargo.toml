@@ -9,8 +9,13 @@ rodio = "0.20"
 pixels = "0.15"
 winit = "0.29"
 winit_input_helper = "0.15"
+minifb = { git = "https://github.com/emoon/rust_minifb.git", rev = "8c38fb7" }
 
 
 [[example]]
 name = "invaders"
 path = "games/invaders/src/main.rs"
+
+[[example]]
+name = "chip8"
+path = "programs/chip8/src/main.rs"
